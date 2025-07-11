@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+description: keep readme happy
+---
+# Keep README Updated
+
+After making any significant changes to the n8n node, such as adding new features, changing properties, or updating the API client, please ensure the [README.md](mdc:README.md) is updated to reflect these changes.
+
+This includes:
+- Documenting new operations and resources.
+- Explaining any new parameters.
+- Updating examples.

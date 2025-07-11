@@ -1,0 +1,29 @@
+{
+	"node": "n8n-nodes-nessus.Nessus",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Security"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://developer.tenable.com/reference/navigate"
+			}
+		],
+		"generic": [
+			{
+				"label": "Nessus Vulnerability Scanner Integration",
+				"icon": "🛡️",
+				"url": "https://www.tenable.com/products/nessus"
+			},
+			{
+				"label": "Security Automation with n8n",
+				"icon": "🔒",
+				"url": "https://n8n.io/blog/security-automation-workflows/"
+			}
+		]
+	},
+	"alias": ["vulnerability scanner", "security", "nessus", "tenable"],
+	"subcategories": {
+		"Security": ["Vulnerability Management", "Security Scanning", "Compliance"]
+	}
+}

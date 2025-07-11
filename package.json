@@ -1,19 +1,24 @@
 {
-  "name": "n8n-nodes-demo-weather9",
-  "version": "0.1.1",
-  "description": "n8n node for weather data using OpenWeatherMap API",
+  "name": "n8n-nodes-nessus",
+  "version": "1.0.0",
+  "description": "n8n community node for Tenable Nessus vulnerability scanner integration",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "nessus",
+    "tenable",
+    "vulnerability",
+    "security",
+    "scanner"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/arpit-patel1/n8n-nodes-cityweather",
+  "homepage": "https://github.com/your-username/n8n-nodes-nessus",
   "author": {
-    "name": "Anonymous Seeker",
-    "email": "anonymous.seeker@example.com"
+    "name": "Your Name",
+    "email": "your.email@example.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/arpit-patel1/n8n-nodes-cityweather.git"
+    "url": "https://github.com/your-username/n8n-nodes-nessus.git"
   },
   "engines": {
     "node": ">=20.15"
@@ -33,10 +38,10 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/DemoWeather9Api.credentials.js"
+      "dist/credentials/NessusApi.credentials.js"
     ],
     "nodes": [
-      "dist/nodes/DemoWeather9/DemoWeather9.node.js"
+      "dist/nodes/Nessus/Nessus.node.js"
     ]
   },
   "devDependencies": {

@@ -1,0 +1,111 @@
+---
+alwaysApply: true
+description: n8n Node Development Reference Guide
+---
+
+# n8n Node Development Reference Guide
+
+This guide references multiple n8n node implementations available in the project for guidance and best practices.
+
+## Reference Node Examples
+
+The project contains several complete n8n node implementations in the `reference_only/n8n-reference-nodes/` directory:
+
+### 1. WatsonX Node - [LmChatWatsonX.node.ts](mdc:reference_only/n8n-reference-nodes/n8n-nodes-watsonx-main/nodes/Watsonx/LmChatWatsonX.node.ts)
+- **Purpose**: AI chat integration with IBM WatsonX
+- **Features**: Complex API integration, multiple parameters, streaming support
+- **Credentials**: [WatsonXApi.credentials.ts](mdc:reference_only/n8n-reference-nodes/n8n-nodes-watsonx-main/credentials/WatsonXApi.credentials.ts)
+- **Icon**: [IBM_watsonx_logo.svg](mdc:reference_only/n8n-reference-nodes/n8n-nodes-watsonx-main/nodes/Watsonx/IBM_watsonx_logo.svg)
+
+### 2. Utils Node - [Utils.node.ts](mdc:reference_only/n8n-reference-nodes/n8n-nodes-utils-main/nodes/Utils/Utils.node.ts)
+- **Purpose**: General utility functions
+- **Features**: Simple operations, string manipulation, data transformation
+- **Metadata**: [Utils.node.json](mdc:reference_only/n8n-reference-nodes/n8n-nodes-utils-main/nodes/Utils/Utils.node.json)
+- **Icon**: [bitovi.svg](mdc:reference_only/n8n-reference-nodes/n8n-nodes-utils-main/nodes/Utils/bitovi.svg)
+
+### 3. Markitdown Node - [Markitdown.node.ts](mdc:reference_only/n8n-reference-nodes/n8n-nodes-markitdown-main/nodes/Markitdown/Markitdown.node.ts)
+- **Purpose**: Document conversion using Microsoft Markitdown
+- **Features**: File processing, external library integration
+- **Metadata**: [Markitdown.node.json](mdc:reference_only/n8n-reference-nodes/n8n-nodes-markitdown-main/nodes/Markitdown/Markitdown.node.json)
+- **Icon**: [microsoft.svg](mdc:reference_only/n8n-reference-nodes/n8n-nodes-markitdown-main/nodes/Markitdown/microsoft.svg)
+
+### 4. Excel Node - [Excel.node.ts](mdc:reference_only/n8n-reference-nodes/n8n-nodes-excel-main/nodes/Excel/Excel.node.ts)
+- **Purpose**: Excel file operations
+- **Features**: File manipulation, data processing, multiple operations
+- **Metadata**: [Excel.node.json](mdc:reference_only/n8n-reference-nodes/n8n-nodes-excel-main/nodes/Excel/Excel.node.json)
+- **Icon**: [excel.svg](mdc:reference_only/n8n-reference-nodes/n8n-nodes-excel-main/nodes/Excel/excel.svg)
+
+## Standard n8n Node Structure
+
+Based on the reference nodes, every n8n node should follow this structure:
+
+```
+nodes/
+  YourNode/
+    YourNode.node.ts       # Main node implementation
+    YourNode.node.json     # Node metadata
+    your-icon.svg          # Node icon
+    dependencies/          # Optional: external dependencies
+    test/                  # Optional: test files
+```
+
+## Key Implementation Patterns
+
+### 1. Node Class Structure
+Reference the node implementations above for the standard class structure:
+- Extends `INodeType`
+- Implements `description` property with node metadata
+- Implements `execute` method for node logic
+- Uses proper TypeScript typing throughout
+
+### 2. Node Properties
+All reference nodes demonstrate different property patterns:
+- **Resource/Operation pattern**: Used in Excel and Utils nodes for multiple operations
+- **Simple parameters**: Used in Markitdown for straightforward operations
+- **Complex configurations**: Used in WatsonX for AI model parameters
+
+### 3. Authentication & Credentials
+- Reference [WatsonXApi.credentials.ts](mdc:reference_only/n8n-reference-nodes/n8n-nodes-watsonx-main/credentials/WatsonXApi.credentials.ts) for API key authentication
+- Credentials files should be in the `credentials/` directory
+- Use `this.getCredentials()` in node execution
+
+### 4. Error Handling
+All reference nodes demonstrate proper error handling:
+- Try-catch blocks around API calls
+- Meaningful error messages
+- Proper NodeApiError usage
+
+### 5. Data Processing
+Reference nodes show different data processing patterns:
+- Single item processing (Markitdown)
+- Multiple item processing (Excel)
+- Streaming data handling (WatsonX)
+
+## Development Configuration Files
+
+All reference projects include these configuration files:
+- [package.json](mdc:reference_only/n8n-reference-nodes/n8n-nodes-watsonx-main/package.json) - Dependencies and scripts
+- [tsconfig.json](mdc:reference_only/n8n-reference-nodes/n8n-nodes-watsonx-main/tsconfig.json) - TypeScript configuration
+- [gulpfile.js](mdc:reference_only/n8n-reference-nodes/n8n-nodes-watsonx-main/gulpfile.js) - Build configuration
+- [.eslintrc.js](mdc:reference_only/n8n-reference-nodes/n8n-nodes-watsonx-main/.eslintrc.js) - Linting rules
+
+## Best Practices from Reference Nodes
+
+1. **Use TypeScript**: All reference nodes are implemented in TypeScript
+2. **Follow naming conventions**: PascalCase for node names, camelCase for properties
+3. **Include proper documentation**: Clear descriptions and parameter explanations
+4. **Handle async operations**: Use async/await patterns consistently
+5. **Validate inputs**: Check required parameters and provide meaningful validation
+6. **Use proper icons**: SVG icons should be simple and recognizable
+7. **Follow n8n conventions**: Use `INodeExecutionData` for return values
+
+## When Creating New Nodes
+
+1. Study the most similar reference node first
+2. Copy the structure and adapt the logic
+3. Ensure proper TypeScript typing
+4. Include comprehensive error handling
+5. Test with various input scenarios
+6. Follow the existing code style and patterns
+
+Use these reference implementations as templates and guides for consistent, high-quality n8n node development.

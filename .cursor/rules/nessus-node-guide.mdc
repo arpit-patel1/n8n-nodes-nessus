@@ -1,0 +1,64 @@
+---
+alwaysApply: true
+description: The purpose of this node
+---
+# n8n Nessus Node Implementation Guide
+
+This guide outlines the process of creating a new n8n node for interacting with the Nessus vulnerability scanner. The goal is to replicate the functionality of the Python `pyTenable` library in TypeScript within the n8n framework.
+
+The primary reference for the Nessus API is the Python code located in the `reference_only/pyTenable-main/tenable/nessus/` directory.
+
+## 1. Understand the n8n Node Structure
+
+Before you begin, familiarize yourself with the structure of an n8n node. A good example to follow is the `DemoWeather9` node included in this project.
+
+- **Node Logic:** [nodes/DemoWeather9/DemoWeather9.node.ts](mdc:nodes/DemoWeather9/DemoWeather9.node.ts) - This file contains the node's definition, properties (the UI fields), and the `execute` method that implements the node's functionality.
+- **Node Metadata:** [nodes/DemoWeather9/DemoWeather9.node.json](mdc:nodes/DemoWeather9/DemoWeather9.node.json) - Contains metadata about the node.
+- **Credentials:** [credentials/DemoWeather9Api.credentials.ts](mdc:credentials/DemoWeather9Api.credentials.ts) - Defines the credentials needed to authenticate with the API.
+
+## 2. Python Reference Files (pyTenable)
+
+The core logic for interacting with the Nessus API will be ported from the `pyTenable` library. The key files to reference are in `reference_only/pyTenable-main/tenable/nessus/`:
+
+- **[api.py](mdc:reference_only/pyTenable-main/tenable/nessus/api.py):** The base API class that handles authentication and requests. This is the foundation of the API client.
+- **[scans.py](mdc:reference_only/pyTenable-main/tenable/nessus/scans.py):** Contains all methods related to creating, listing, and managing scans. This will be the most important file for your initial implementation.
+- **[policies.py](mdc:reference_only/pyTenable-main/tenable/nessus/policies.py):** For managing scan policies.
+- **[plugins.py](mdc:reference_only/pyTenable-main/tenable/nessus/plugins.py):** For interacting with Nessus plugins.
+- **[session.py](mdc:reference_only/pyTenable-main/tenable/nessus/session.py):** Handles session management.
+
+## 3. Implementation Steps
+
+Here is a recommended plan for creating the Nessus node:
+
+### Step 1: Create the Node File Structure
+
+Create a new directory `nodes/Nessus`. Inside this directory, create:
+- `Nessus.node.ts`
+- `Nessus.node.json`
+- `nessus-icon.svg` (you can copy a placeholder icon for now)
+
+Also create a new credential file: `credentials/NessusApi.credentials.ts`. This should define fields for the Nessus URL, Access Key, and Secret Key.
+
+### Step 2: Implement the Nessus API Client
+
+It's a good practice to separate the API interaction logic from the n8n node logic. Create a new file, for example, `nodes/Nessus/NessusApi.ts`.
+
+In this file, create a `NessusApi` class. This class will be responsible for making all API calls to Nessus.
+- Start by implementing the authentication logic from `session.py` and `api.py`. The client will need to handle the `X-ApiKeys` header for authentication.
+- Translate the Python methods from `scans.py` into TypeScript methods in your `NessusApi` class. For example, `scans.list()` in Python becomes `listScans()` in TypeScript. Use `this.helpers.request()` (available in the node's `execute` context) or a dedicated HTTP client library like `axios`.
+
+### Step 3: Define Node Properties in `Nessus.node.ts`
+
+In `Nessus.node.ts`, define the user-facing properties for the node. A good start would be:
+- A `resource` property to select the type of object to work with (e.g., "Scan").
+- An `operation` property to select the action to perform (e.g., "List", "Create", "Get Details").
+- Fields for required parameters based on the selected operation, such as `scan_id` or parameters for creating a new scan.
+
+### Step 4: Implement the `execute` Method
+
+In `Nessus.node.ts`, implement the `execute` method.
+- Get the credentials using `this.getCredentials('nessusApi')`.
+- Instantiate your `NessusApi` client, passing the credentials.
+- Get the operation and other parameters from the node.
+- Call the appropriate method on your `NessusApi` client.
+- Format the results and return them as `INodeExecutionData`.
