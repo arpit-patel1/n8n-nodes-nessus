@@ -384,7 +384,7 @@ export class Nessus implements INodeType {
 				description: 'Name of the scan (auto-generated if left empty)',
 			},
 			{
-				displayName: 'Policy Template',
+				displayName: 'Policy Template Name or ID',
 				name: 'policyUuid',
 				type: 'options',
 				typeOptions: {
@@ -397,7 +397,7 @@ export class Nessus implements INodeType {
 					},
 				},
 				default: '',
-				description: 'Policy template to use (will auto-select Basic Network Scan if left empty)',
+				description: 'Policy template to use (will auto-select Basic Network Scan if left empty). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
 				placeholder: 'Select a policy template...',
 			},
 			// Export Parameters
