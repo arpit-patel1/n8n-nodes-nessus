@@ -4,7 +4,7 @@ This is an n8n community node for interacting with Tenable Nessus vulnerability 
 
 <div align="center">
   <img src="https://raw.githubusercontent.com/n8n-io/n8n/master/assets/n8n-logo.png" alt="n8n" width="200">
-  <img src="./nodes/Nessus/nessus-icon.svg" alt="Nessus Node" width="100">
+  <img src="https://raw.githubusercontent.com/arpit-patel1/n8n-nodes-nessus/refs/heads/master/nodes/Nessus/nessus-icon.svg" alt="Nessus Node" width="100">
 </div>
 
 ## About
