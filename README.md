@@ -2,7 +2,10 @@
 
 This is an n8n community node for interacting with Tenable Nessus vulnerability scanners, bringing comprehensive vulnerability management capabilities to n8n workflows.
 
-![n8n](https://raw.githubusercontent.com/n8n-io/n8n/master/assets/n8n-logo.png)
+<div align="center">
+  <img src="https://raw.githubusercontent.com/n8n-io/n8n/master/assets/n8n-logo.png" alt="n8n" width="200">
+  <img src="./nodes/Nessus/nessus-icon.svg" alt="Nessus Node" width="100">
+</div>
 
 ## About
 
