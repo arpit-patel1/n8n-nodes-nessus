@@ -4,6 +4,7 @@ import type {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
+	ILoadOptionsFunctions,
 } from 'n8n-workflow';
 import { NodeOperationError, NodeConnectionType } from 'n8n-workflow';
 import { NessusApi } from './NessusApi';
@@ -173,6 +174,12 @@ export class Nessus implements INodeType {
 						value: 'list',
 						description: 'List all policies',
 						action: 'List all policies',
+					},
+					{
+						name: 'List Templates',
+						value: 'listTemplates',
+						description: 'List available policy templates',
+						action: 'List policy templates',
 					},
 					{
 						name: 'Update',
@@ -349,34 +356,6 @@ export class Nessus implements INodeType {
 			},
 			// Scan Creation Parameters
 			{
-				displayName: 'Scan Name',
-				name: 'scanName',
-				type: 'string',
-				required: true,
-				displayOptions: {
-					show: {
-						resource: ['scan'],
-						operation: ['create'],
-					},
-				},
-				default: '',
-				description: 'Name of the scan',
-			},
-			{
-				displayName: 'Policy UUID',
-				name: 'policyUuid',
-				type: 'string',
-				required: true,
-				displayOptions: {
-					show: {
-						resource: ['scan'],
-						operation: ['create'],
-					},
-				},
-				default: '',
-				description: 'UUID of the policy template to use',
-			},
-			{
 				displayName: 'Targets',
 				name: 'targets',
 				type: 'string',
@@ -388,7 +367,38 @@ export class Nessus implements INodeType {
 					},
 				},
 				default: '',
-				description: 'Comma-separated list of targets to scan',
+				description: 'IP addresses, ranges, or hostnames to scan',
+				placeholder: '192.168.1.1, 192.168.1.0/24, example.com',
+			},
+			{
+				displayName: 'Scan Name',
+				name: 'scanName',
+				type: 'string',
+				displayOptions: {
+					show: {
+						resource: ['scan'],
+						operation: ['create'],
+					},
+				},
+				default: '=Basic Scan - {{new Date().toISOString().split("T")[0]}}',
+				description: 'Name of the scan (auto-generated if left empty)',
+			},
+			{
+				displayName: 'Policy Template',
+				name: 'policyUuid',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getPolicyTemplates',
+				},
+				displayOptions: {
+					show: {
+						resource: ['scan'],
+						operation: ['create'],
+					},
+				},
+				default: '',
+				description: 'Policy template to use (will auto-select Basic Network Scan if left empty)',
+				placeholder: 'Select a policy template...',
 			},
 			// Export Parameters
 			{
@@ -482,6 +492,33 @@ export class Nessus implements INodeType {
 		],
 	};
 
+	methods = {
+		loadOptions: {
+			async getPolicyTemplates(this: ILoadOptionsFunctions) {
+				const nessusApi = new NessusApi(this as any);
+				try {
+					const templates = await nessusApi.listScanTemplates();
+					const options = templates.templates.map((template: any) => ({
+						name: template.title,
+						value: template.uuid,
+						description: template.description,
+					}));
+					
+					// Sort to put basic scan templates first
+					options.sort((a: any, b: any) => {
+						if (a.name.toLowerCase().includes('basic') || a.name.toLowerCase().includes('network')) return -1;
+						if (b.name.toLowerCase().includes('basic') || b.name.toLowerCase().includes('network')) return 1;
+						return a.name.localeCompare(b.name);
+					});
+					
+					return options;
+				} catch (error) {
+					throw new NodeOperationError(this.getNode(), `Failed to load policy templates: ${error.message}`);
+				}
+			},
+		},
+	};
+
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
@@ -503,13 +540,30 @@ export class Nessus implements INodeType {
 						responseData = await nessusApi.getScanDetails(scanId);
 					} else if (operation === 'create') {
 						const scanName = this.getNodeParameter('scanName', i) as string;
-						const policyUuid = this.getNodeParameter('policyUuid', i) as string;
+						let policyUuid = this.getNodeParameter('policyUuid', i) as string;
 						const targets = this.getNodeParameter('targets', i) as string;
+						
+						// If no policy template is selected, use the first available one
+						if (!policyUuid) {
+							const templates = await nessusApi.listScanTemplates();
+							if (templates.templates && templates.templates.length > 0) {
+								// Sort templates to prioritize basic network scans
+								const sortedTemplates = templates.templates.sort((a: any, b: any) => {
+									if (a.title.toLowerCase().includes('basic') || a.title.toLowerCase().includes('network')) return -1;
+									if (b.title.toLowerCase().includes('basic') || b.title.toLowerCase().includes('network')) return 1;
+									return a.title.localeCompare(b.title);
+								});
+								policyUuid = sortedTemplates[0].uuid;
+							}
+						}
+						
+						// Generate scan name if not provided
+						const finalScanName = scanName || `Basic Scan - ${new Date().toISOString().split('T')[0]}`;
 						
 						const scanData = {
 							uuid: policyUuid,
 							settings: {
-								name: scanName,
+								name: finalScanName,
 								text_targets: targets,
 								enabled: false,
 							},
@@ -558,6 +612,8 @@ export class Nessus implements INodeType {
 					} else if (operation === 'copy') {
 						const policyId = this.getNodeParameter('policyId', i) as number;
 						responseData = await nessusApi.copyPolicy(policyId);
+					} else if (operation === 'listTemplates') {
+						responseData = await nessusApi.listScanTemplates();
 					}
 				} else if (resource === 'folder') {
 					if (operation === 'list') {
