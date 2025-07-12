@@ -483,20 +483,7 @@ export class Nessus implements INodeType {
 				default: '',
 				description: 'Name of the folder to create',
 			},
-			// Copy Parameters
-			{
-				displayName: 'New Name',
-				name: 'newName',
-				type: 'string',
-				displayOptions: {
-					show: {
-						resource: ['scan'],
-						operation: ['copy'],
-					},
-				},
-				default: '',
-				description: 'Name for the copied scan (optional)',
-			},
+
 			{
 				displayName: 'Destination Folder Name or ID',
 				name: 'destinationFolderId',
@@ -596,13 +583,17 @@ export class Nessus implements INodeType {
 				const nessusApi = new NessusApi(this as any);
 				try {
 					const policies = await nessusApi.listPolicies();
-					// The API returns the policies array directly
+					
+					if (!Array.isArray(policies) || policies.length === 0) {
+						return [];
+					}
+					
 					const options = policies.map((policy: any) => {
 						// Format creation date
 						const creationDate = policy.creation_date ? new Date(policy.creation_date * 1000).toLocaleDateString() : 'Unknown';
 						
 						return {
-							name: policy.name,
+							name: policy.name || policy.title || `Policy ${policy.id}`,
 							value: policy.id,
 							description: `ID: ${policy.id} | Created: ${creationDate} | Owner: ${policy.owner || 'Unknown'}`,
 						};
@@ -620,7 +611,11 @@ export class Nessus implements INodeType {
 				const nessusApi = new NessusApi(this as any);
 				try {
 					const folders = await nessusApi.listFolders();
-					// The API returns the folders array directly
+					
+					if (!Array.isArray(folders) || folders.length === 0) {
+						return [];
+					}
+					
 					const options = folders.map((folder: any) => ({
 						name: folder.name,
 						value: folder.id,
@@ -639,7 +634,11 @@ export class Nessus implements INodeType {
 				const nessusApi = new NessusApi(this as any);
 				try {
 					const families = await nessusApi.listPluginFamilies();
-					// The API returns the families array directly
+					
+					if (!Array.isArray(families) || families.length === 0) {
+						return [];
+					}
+					
 					const options = families.map((family: any) => ({
 						name: family.name,
 						value: family.id,
@@ -664,7 +663,11 @@ export class Nessus implements INodeType {
 					}
 					
 					const plugins = await nessusApi.listPluginsInFamily(parseInt(familyId));
-					// The API returns the plugins array directly
+					
+					if (!Array.isArray(plugins) || plugins.length === 0) {
+						return [];
+					}
+					
 					const options = plugins.map((plugin: any) => ({
 						name: `${plugin.name} (ID: ${plugin.id})`,
 						value: plugin.id,

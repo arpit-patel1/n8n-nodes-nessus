@@ -190,8 +190,8 @@ export class NessusApi {
 	async listPolicies(paginationOptions?: PaginationOptions): Promise<any> {
 		const params = this.buildPaginationParams(paginationOptions);
 		const response = await this.makeRequest({ method: 'GET', endpoint: '/policies', params });
-		// The API returns { policies: [...] }, but we want to return the array directly
-		return response.policies || response;
+		// According to pyTenable: return self._get()['policies']
+		return response.policies;
 	}
 
 	async getPolicyDetails(policyId: number): Promise<any> {
@@ -223,8 +223,8 @@ export class NessusApi {
 	// Enhanced Folder Operations
 	async listFolders(): Promise<any> {
 		const response = await this.makeRequest({ method: 'GET', endpoint: '/folders' });
-		// The API returns { folders: [...] }, but we want to return the array directly
-		return response.folders || response;
+		// According to pyTenable: return self._get()['folders']
+		return response.folders;
 	}
 
 	async createFolder(name: string): Promise<any> {
@@ -241,16 +241,16 @@ export class NessusApi {
 	async listPluginFamilies(paginationOptions?: PaginationOptions): Promise<any> {
 		const params = this.buildPaginationParams(paginationOptions);
 		const response = await this.makeRequest({ method: 'GET', endpoint: '/plugins/families', params });
-		// The API returns { families: [...] }, but we want to return the array directly
-		return response.families || response;
+		// According to pyTenable pattern: return self._get()['families']
+		return response.families;
 	}
 
 	async listPluginsInFamily(familyId: number, paginationOptions?: PaginationOptions): Promise<any> {
 		this.validateId(familyId, 'Family ID');
 		const params = this.buildPaginationParams(paginationOptions);
 		const response = await this.makeRequest({ method: 'GET', endpoint: `/plugins/families/${familyId}`, params });
-		// The API returns { plugins: [...] }, but we want to return the array directly
-		return response.plugins || response;
+		// According to pyTenable pattern: return self._get()['plugins']
+		return response.plugins;
 	}
 
 	async getPluginDetails(pluginId: number): Promise<any> {
