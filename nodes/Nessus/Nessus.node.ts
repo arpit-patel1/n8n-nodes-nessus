@@ -596,7 +596,8 @@ export class Nessus implements INodeType {
 				const nessusApi = new NessusApi(this as any);
 				try {
 					const policies = await nessusApi.listPolicies();
-					const options = policies.policies.map((policy: any) => {
+					// The API returns the policies array directly
+					const options = policies.map((policy: any) => {
 						// Format creation date
 						const creationDate = policy.creation_date ? new Date(policy.creation_date * 1000).toLocaleDateString() : 'Unknown';
 						
@@ -619,7 +620,8 @@ export class Nessus implements INodeType {
 				const nessusApi = new NessusApi(this as any);
 				try {
 					const folders = await nessusApi.listFolders();
-					const options = folders.folders.map((folder: any) => ({
+					// The API returns the folders array directly
+					const options = folders.map((folder: any) => ({
 						name: folder.name,
 						value: folder.id,
 						description: `ID: ${folder.id} | Type: ${folder.type || 'Unknown'}`,
@@ -637,7 +639,8 @@ export class Nessus implements INodeType {
 				const nessusApi = new NessusApi(this as any);
 				try {
 					const families = await nessusApi.listPluginFamilies();
-					const options = families.families.map((family: any) => ({
+					// The API returns the families array directly
+					const options = families.map((family: any) => ({
 						name: family.name,
 						value: family.id,
 						description: `ID: ${family.id} | Count: ${family.count || 0} plugins`,
@@ -661,7 +664,8 @@ export class Nessus implements INodeType {
 					}
 					
 					const plugins = await nessusApi.listPluginsInFamily(parseInt(familyId));
-					const options = plugins.plugins.map((plugin: any) => ({
+					// The API returns the plugins array directly
+					const options = plugins.map((plugin: any) => ({
 						name: `${plugin.name} (ID: ${plugin.id})`,
 						value: plugin.id,
 						description: `Risk: ${plugin.risk_factor || 'Unknown'} | Family: ${plugin.family_name || 'Unknown'}`,
