@@ -133,10 +133,6 @@ This node requires Nessus API credentials. You can obtain these by:
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
 - [Tenable Nessus](https://www.tenable.com/products/nessus)
 
-## Version
-
-1.0.0
-
 ## License
 
 [MIT](LICENSE.md)

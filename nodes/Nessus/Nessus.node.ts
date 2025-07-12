@@ -285,9 +285,12 @@ export class Nessus implements INodeType {
 			},
 			// Common ID Parameters
 			{
-				displayName: 'Scan ID',
+				displayName: 'Scan Name or ID',
 				name: 'scanId',
-				type: 'number',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getScans',
+				},
 				required: true,
 				displayOptions: {
 					show: {
@@ -295,13 +298,17 @@ export class Nessus implements INodeType {
 						operation: ['getDetails', 'launch', 'stop', 'pause', 'resume', 'delete', 'export', 'copy'],
 					},
 				},
-				default: 0,
-				description: 'The ID of the scan',
+				default: '',
+				description: 'Select the scan to operate on. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				placeholder: 'Select a scan...',
 			},
 			{
-				displayName: 'Policy ID',
+				displayName: 'Policy Name or ID',
 				name: 'policyId',
-				type: 'number',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getPolicies',
+				},
 				required: true,
 				displayOptions: {
 					show: {
@@ -309,13 +316,17 @@ export class Nessus implements INodeType {
 						operation: ['getDetails', 'update', 'delete', 'copy'],
 					},
 				},
-				default: 0,
-				description: 'The ID of the policy',
+				default: '',
+				description: 'Select the policy to operate on. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				placeholder: 'Select a policy...',
 			},
 			{
-				displayName: 'Folder ID',
+				displayName: 'Folder Name or ID',
 				name: 'folderId',
-				type: 'number',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getFolders',
+				},
 				required: true,
 				displayOptions: {
 					show: {
@@ -323,13 +334,17 @@ export class Nessus implements INodeType {
 						operation: ['delete'],
 					},
 				},
-				default: 0,
-				description: 'The ID of the folder',
+				default: '',
+				description: 'Select the folder to delete. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				placeholder: 'Select a folder...',
 			},
 			{
-				displayName: 'Plugin Family ID',
+				displayName: 'Plugin Family Name or ID',
 				name: 'familyId',
-				type: 'number',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getPluginFamilies',
+				},
 				required: true,
 				displayOptions: {
 					show: {
@@ -337,13 +352,17 @@ export class Nessus implements INodeType {
 						operation: ['listPluginsInFamily'],
 					},
 				},
-				default: 0,
-				description: 'The ID of the plugin family',
+				default: '',
+				description: 'Select the plugin family. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				placeholder: 'Select a plugin family...',
 			},
 			{
-				displayName: 'Plugin ID',
+				displayName: 'Plugin Name or ID',
 				name: 'pluginId',
-				type: 'number',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getPluginsInFamily',
+				},
 				required: true,
 				displayOptions: {
 					show: {
@@ -351,8 +370,9 @@ export class Nessus implements INodeType {
 						operation: ['getPluginDetails'],
 					},
 				},
-				default: 0,
-				description: 'The ID of the plugin',
+				default: '',
+				description: 'Select the plugin. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				placeholder: 'Select a plugin...',
 			},
 			// Scan Creation Parameters
 			{
@@ -433,6 +453,21 @@ export class Nessus implements INodeType {
 				default: 'nessus',
 				description: 'Format for the exported scan results',
 			},
+			// Copy Parameters
+			{
+				displayName: 'New Name',
+				name: 'newName',
+				type: 'string',
+				displayOptions: {
+					show: {
+						resource: ['scan'],
+						operation: ['copy'],
+					},
+				},
+				default: '',
+				description: 'Name for the copied scan (optional - will use original name with "Copy" suffix if not provided)',
+				placeholder: 'My Scan Copy',
+			},
 			// Folder Name for Creation
 			{
 				displayName: 'Folder Name',
@@ -463,17 +498,21 @@ export class Nessus implements INodeType {
 				description: 'Name for the copied scan (optional)',
 			},
 			{
-				displayName: 'Destination Folder ID',
+				displayName: 'Destination Folder Name or ID',
 				name: 'destinationFolderId',
-				type: 'number',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getFolders',
+				},
 				displayOptions: {
 					show: {
 						resource: ['scan'],
 						operation: ['copy'],
 					},
 				},
-				default: 0,
-				description: 'ID of the destination folder (optional)',
+				default: '',
+				description: 'Select the destination folder (optional). Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+				placeholder: 'Select a folder...',
 			},
 			// Alternative Targets for Launch
 			{
@@ -516,6 +555,126 @@ export class Nessus implements INodeType {
 					throw new NodeOperationError(this.getNode(), `Failed to load policy templates: ${error.message}`);
 				}
 			},
+			async getScans(this: ILoadOptionsFunctions) {
+				const nessusApi = new NessusApi(this as any);
+				try {
+					const scans = await nessusApi.listScans();
+					const options = scans.scans.map((scan: any) => {
+						// Format creation date
+						const creationDate = scan.creation_date ? new Date(scan.creation_date * 1000).toLocaleDateString() : 'Unknown';
+						
+						// Create a more descriptive name
+						let statusText = scan.status || 'Unknown';
+						if (scan.status === 'running') statusText = '🟢 Running';
+						else if (scan.status === 'completed') statusText = '✅ Completed';
+						else if (scan.status === 'paused') statusText = '⏸️ Paused';
+						else if (scan.status === 'stopped') statusText = '⏹️ Stopped';
+						else if (scan.status === 'canceled') statusText = '❌ Canceled';
+						
+						return {
+							name: `${scan.name} (${statusText})`,
+							value: scan.id,
+							description: `ID: ${scan.id} | Created: ${creationDate} | Owner: ${scan.owner || 'Unknown'}`,
+						};
+					});
+					
+					// Sort by status (running first, then by name)
+					options.sort((a: any, b: any) => {
+						const aRunning = a.name.includes('🟢 Running');
+						const bRunning = b.name.includes('🟢 Running');
+						if (aRunning && !bRunning) return -1;
+						if (!aRunning && bRunning) return 1;
+						return a.name.localeCompare(b.name);
+					});
+					
+					return options;
+				} catch (error) {
+					throw new NodeOperationError(this.getNode(), `Failed to load scans: ${error.message}`);
+				}
+			},
+			async getPolicies(this: ILoadOptionsFunctions) {
+				const nessusApi = new NessusApi(this as any);
+				try {
+					const policies = await nessusApi.listPolicies();
+					const options = policies.policies.map((policy: any) => {
+						// Format creation date
+						const creationDate = policy.creation_date ? new Date(policy.creation_date * 1000).toLocaleDateString() : 'Unknown';
+						
+						return {
+							name: policy.name,
+							value: policy.id,
+							description: `ID: ${policy.id} | Created: ${creationDate} | Owner: ${policy.owner || 'Unknown'}`,
+						};
+					});
+					
+					// Sort by name
+					options.sort((a: any, b: any) => a.name.localeCompare(b.name));
+					
+					return options;
+				} catch (error) {
+					throw new NodeOperationError(this.getNode(), `Failed to load policies: ${error.message}`);
+				}
+			},
+			async getFolders(this: ILoadOptionsFunctions) {
+				const nessusApi = new NessusApi(this as any);
+				try {
+					const folders = await nessusApi.listFolders();
+					const options = folders.folders.map((folder: any) => ({
+						name: folder.name,
+						value: folder.id,
+						description: `ID: ${folder.id} | Type: ${folder.type || 'Unknown'}`,
+					}));
+					
+					// Sort by name
+					options.sort((a: any, b: any) => a.name.localeCompare(b.name));
+					
+					return options;
+				} catch (error) {
+					throw new NodeOperationError(this.getNode(), `Failed to load folders: ${error.message}`);
+				}
+			},
+			async getPluginFamilies(this: ILoadOptionsFunctions) {
+				const nessusApi = new NessusApi(this as any);
+				try {
+					const families = await nessusApi.listPluginFamilies();
+					const options = families.families.map((family: any) => ({
+						name: family.name,
+						value: family.id,
+						description: `ID: ${family.id} | Count: ${family.count || 0} plugins`,
+					}));
+					
+					// Sort by name
+					options.sort((a: any, b: any) => a.name.localeCompare(b.name));
+					
+					return options;
+				} catch (error) {
+					throw new NodeOperationError(this.getNode(), `Failed to load plugin families: ${error.message}`);
+				}
+			},
+			async getPluginsInFamily(this: ILoadOptionsFunctions) {
+				const nessusApi = new NessusApi(this as any);
+				try {
+					// Get the family ID from the current node parameters
+					const familyId = this.getNodeParameter('familyId') as string;
+					if (!familyId) {
+						return [];
+					}
+					
+					const plugins = await nessusApi.listPluginsInFamily(parseInt(familyId));
+					const options = plugins.plugins.map((plugin: any) => ({
+						name: `${plugin.name} (ID: ${plugin.id})`,
+						value: plugin.id,
+						description: `Risk: ${plugin.risk_factor || 'Unknown'} | Family: ${plugin.family_name || 'Unknown'}`,
+					}));
+					
+					// Sort by name
+					options.sort((a: any, b: any) => a.name.localeCompare(b.name));
+					
+					return options;
+				} catch (error) {
+					throw new NodeOperationError(this.getNode(), `Failed to load plugins: ${error.message}`);
+				}
+			},
 		},
 	};
 
@@ -535,10 +694,10 @@ export class Nessus implements INodeType {
 				if (resource === 'scan') {
 					if (operation === 'list') {
 						responseData = await nessusApi.listScans();
-					} else if (operation === 'getDetails') {
-						const scanId = this.getNodeParameter('scanId', i) as number;
-						responseData = await nessusApi.getScanDetails(scanId);
-					} else if (operation === 'create') {
+									} else if (operation === 'getDetails') {
+					const scanId = parseInt(this.getNodeParameter('scanId', i) as string);
+					responseData = await nessusApi.getScanDetails(scanId);
+				} else if (operation === 'create') {
 						const scanName = this.getNodeParameter('scanName', i) as string;
 						let policyUuid = this.getNodeParameter('policyUuid', i) as string;
 						const targets = this.getNodeParameter('targets', i) as string;
@@ -569,49 +728,50 @@ export class Nessus implements INodeType {
 							},
 						};
 						responseData = await nessusApi.createScan(scanData);
-					} else if (operation === 'launch') {
-						const scanId = this.getNodeParameter('scanId', i) as number;
-						const altTargets = this.getNodeParameter('altTargets', i) as string;
-						const altTargetsList = altTargets ? altTargets.split(',').map(t => t.trim()) : undefined;
-						responseData = await nessusApi.launchScan(scanId, altTargetsList);
-					} else if (operation === 'stop') {
-						const scanId = this.getNodeParameter('scanId', i) as number;
-						responseData = await nessusApi.stopScan(scanId);
-					} else if (operation === 'pause') {
-						const scanId = this.getNodeParameter('scanId', i) as number;
-						responseData = await nessusApi.pauseScan(scanId);
-					} else if (operation === 'resume') {
-						const scanId = this.getNodeParameter('scanId', i) as number;
-						responseData = await nessusApi.resumeScan(scanId);
-					} else if (operation === 'delete') {
-						const scanId = this.getNodeParameter('scanId', i) as number;
-						responseData = await nessusApi.deleteScan(scanId);
-					} else if (operation === 'export') {
-						const scanId = this.getNodeParameter('scanId', i) as number;
-						const exportFormat = this.getNodeParameter('exportFormat', i) as string;
-						responseData = await nessusApi.exportScan(scanId, exportFormat);
-					} else if (operation === 'copy') {
-						const scanId = this.getNodeParameter('scanId', i) as number;
-						const newName = this.getNodeParameter('newName', i) as string;
-						const destinationFolderId = this.getNodeParameter('destinationFolderId', i) as number;
-						responseData = await nessusApi.copyScan(
-							scanId,
-							destinationFolderId || undefined,
-							newName || undefined
-						);
-					}
+									} else if (operation === 'launch') {
+					const scanId = parseInt(this.getNodeParameter('scanId', i) as string);
+					const altTargets = this.getNodeParameter('altTargets', i) as string;
+					const altTargetsList = altTargets ? altTargets.split(',').map(t => t.trim()) : undefined;
+					responseData = await nessusApi.launchScan(scanId, altTargetsList);
+				} else if (operation === 'stop') {
+					const scanId = parseInt(this.getNodeParameter('scanId', i) as string);
+					responseData = await nessusApi.stopScan(scanId);
+				} else if (operation === 'pause') {
+					const scanId = parseInt(this.getNodeParameter('scanId', i) as string);
+					responseData = await nessusApi.pauseScan(scanId);
+				} else if (operation === 'resume') {
+					const scanId = parseInt(this.getNodeParameter('scanId', i) as string);
+					responseData = await nessusApi.resumeScan(scanId);
+				} else if (operation === 'delete') {
+					const scanId = parseInt(this.getNodeParameter('scanId', i) as string);
+					responseData = await nessusApi.deleteScan(scanId);
+				} else if (operation === 'export') {
+					const scanId = parseInt(this.getNodeParameter('scanId', i) as string);
+					const exportFormat = this.getNodeParameter('exportFormat', i) as string;
+					responseData = await nessusApi.exportScan(scanId, exportFormat);
+				} else if (operation === 'copy') {
+					const scanId = parseInt(this.getNodeParameter('scanId', i) as string);
+					const newName = this.getNodeParameter('newName', i) as string;
+					const destinationFolderId = this.getNodeParameter('destinationFolderId', i) as string;
+					const folderId = destinationFolderId ? parseInt(destinationFolderId) : undefined;
+					responseData = await nessusApi.copyScan(
+						scanId,
+						folderId,
+						newName || undefined
+					);
+				}
 				} else if (resource === 'policy') {
 					if (operation === 'list') {
 						responseData = await nessusApi.listPolicies();
-					} else if (operation === 'getDetails') {
-						const policyId = this.getNodeParameter('policyId', i) as number;
-						responseData = await nessusApi.getPolicyDetails(policyId);
-					} else if (operation === 'delete') {
-						const policyId = this.getNodeParameter('policyId', i) as number;
-						responseData = await nessusApi.deletePolicy(policyId);
-					} else if (operation === 'copy') {
-						const policyId = this.getNodeParameter('policyId', i) as number;
-						responseData = await nessusApi.copyPolicy(policyId);
+									} else if (operation === 'getDetails') {
+					const policyId = parseInt(this.getNodeParameter('policyId', i) as string);
+					responseData = await nessusApi.getPolicyDetails(policyId);
+				} else if (operation === 'delete') {
+					const policyId = parseInt(this.getNodeParameter('policyId', i) as string);
+					responseData = await nessusApi.deletePolicy(policyId);
+				} else if (operation === 'copy') {
+					const policyId = parseInt(this.getNodeParameter('policyId', i) as string);
+					responseData = await nessusApi.copyPolicy(policyId);
 					} else if (operation === 'listTemplates') {
 						responseData = await nessusApi.listScanTemplates();
 					}
@@ -621,19 +781,19 @@ export class Nessus implements INodeType {
 					} else if (operation === 'create') {
 						const folderName = this.getNodeParameter('folderName', i) as string;
 						responseData = await nessusApi.createFolder(folderName);
-					} else if (operation === 'delete') {
-						const folderId = this.getNodeParameter('folderId', i) as number;
-						responseData = await nessusApi.deleteFolder(folderId);
+									} else if (operation === 'delete') {
+					const folderId = parseInt(this.getNodeParameter('folderId', i) as string);
+					responseData = await nessusApi.deleteFolder(folderId);
 					}
 				} else if (resource === 'plugin') {
 					if (operation === 'listFamilies') {
 						responseData = await nessusApi.listPluginFamilies();
-					} else if (operation === 'listPluginsInFamily') {
-						const familyId = this.getNodeParameter('familyId', i) as number;
-						responseData = await nessusApi.listPluginsInFamily(familyId);
-					} else if (operation === 'getPluginDetails') {
-						const pluginId = this.getNodeParameter('pluginId', i) as number;
-						responseData = await nessusApi.getPluginDetails(pluginId);
+									} else if (operation === 'listPluginsInFamily') {
+					const familyId = parseInt(this.getNodeParameter('familyId', i) as string);
+					responseData = await nessusApi.listPluginsInFamily(familyId);
+				} else if (operation === 'getPluginDetails') {
+					const pluginId = parseInt(this.getNodeParameter('pluginId', i) as string);
+					responseData = await nessusApi.getPluginDetails(pluginId);
 					}
 				} else if (resource === 'session') {
 					if (operation === 'getDetails') {
